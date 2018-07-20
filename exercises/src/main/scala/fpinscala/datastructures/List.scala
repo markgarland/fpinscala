@@ -37,12 +37,6 @@ object List { // `List` companion object. Contains functions for creating and wo
       case Cons(h,t) => Cons(h, append(t, a2))
     }
 
-  def foldRight[A,B](as: List[A], z: B)(f: (A, B) => B): B = // Utility functions
-    as match {
-      case Nil => z
-      case Cons(x, xs) => f(x, foldRight(xs, z)(f))
-    }
-
   def sum2(ns: List[Int]) =
     foldRight(ns, 0)((x,y) => x + y)
 
@@ -71,28 +65,108 @@ object List { // `List` companion object. Contains functions for creating and wo
     case Cons(h, t) => if (f(h)) dropWhile(t, f) else l
   }
 
+  def dropWhileInferred[A](l: List[A])(f: A => Boolean): List[A] = l match {
+    case Nil => Nil
+    case Cons(h, t) => if (f(h)) dropWhileInferred(t)(f) else l
+  }
+
   def init[A](l: List[A]): List[A] = l match {
     case Nil => throw new Exception("init on Nil")
     case Cons(_,Nil) => Nil
     case Cons(h, t) => Cons(h, init (t))
   }
 
-  def length[A](l: List[A]): Int = ???
+  def length[A](l: List[A]): Int = foldRight(l, 0)((_, y) => 1 + y)
 
-  def foldLeft[A,B](l: List[A], z: B)(f: (B, A) => B): B = ???
+  def foldRight[A,B](as: List[A], z: B)(f: (A, B) => B): B = // Utility functions
+    as match {
+      case Nil => z
+      case Cons(x, xs) => f(x, foldRight(xs, z)(f))
+    }
 
-  def map[A,B](l: List[A])(f: A => B): List[B] = ???
+  @annotation.tailrec
+  def foldLeft[A,B](l: List[A], z: B)(f: (B, A) => B): B = l match {
+    case Nil => z
+    case Cons(x, xs) => foldLeft(xs, f(z, x))(f)
+  }
+
+  def foldLeftSum(ns: List[Int]) =
+    foldLeft(ns, 0)(_+_)
+
+  def foldLeftProduct(ns: List[Int]) =
+    foldLeft(ns, 1)(_*_)
+
+  def foldLeftLength(ns: List[Int]) =
+    foldLeft(ns, 0)((_, y) => 1 + y)
+
+  def reverse(ns: List[Int]) = foldLeft(ns, Nil: List[Int])((x, y) => Cons(y,x))
+
+  def appendFolded[A](a1: List[A], a2: List[A]): List[A] = foldLeft(a1, a2)((x, y) => Cons(y, x))
+
+  def concat[A](a1: List[List[A]]): List[A] = foldRight(a1,  Nil: List[A])((x,y)=>appendFolded(x,y))
+
+  def addOne(l: List[Int]): List[Int] = foldRight(l, Nil: List[Int])((x, y) => Cons(x + 1, y))
+
+  def doubleToString(l: List[Double]): List[String] = foldRight(l, Nil: List[String])((x, y) => Cons(x.toString, y))
+
+  def map[A,B](as: List[A])(f: A => B): List[B] = foldRight(as, Nil: List[B])((x, y) => Cons(f(x), y))
+
+  def filter[A](as: List[A])(f: A => Boolean): List[A] = foldRight(as, Nil: List[A])((x, y) => if (f(x)) Cons(x, y) else y)
+
+  def flatMap[A,B](as: List[A])(f: A => List[B]): List[B] = concat(map(as)(f))
+
+  def filterUsingFlatmap[A](as: List[A])(f: A => Boolean): List[A] = flatMap(as)((x) => if (f(x)) Cons(x, Nil) else Nil)
+
+  def addFunction(l1: List[Int], l2: List[Int]): List[Int] = (l1, l2) match {
+    case (_, Nil) => Nil
+    case (Nil, _) => Nil
+    case (Cons(l1x,l1y), Cons(l2x, l2y)) => Cons(l1x+l2x, addFunction(l1y, l2y))
+  }
+
+  def zipWith[A](l1: List[A], l2: List[A])(f: (A, A) => A): List[A] = (l1, l2) match {
+    case (_, Nil) => Nil
+    case (Nil, _) => Nil
+    case (Cons(l1x,l1y), Cons(l2x, l2y)) => Cons(f(l1x,l2x), zipWith(l1y, l2y)(f))
+  }
 
   def main(args: Array[String]): Unit = {
     println (x)
 
-    val list: List[Int] = List(1,2,3)
+    val list: List[Int] = List(1,2,3,4)
+    val list2: List[Int] = List(6,7,8,9)
+    val listDouble: List[Double] = List(1.0, 2.0, 3.0, 4.0)
 
     println (list)
     println ("tail: " + tail(list))
     println ("setHead: " + setHead(list, 4))
     println ("drop: " + drop(list, 2))
     println ("dropWhile: " + dropWhile(list, (x: Int) => x <= 2))
+    println ("dropWhileInferred: " + dropWhileInferred(list)(x => x <= 2))
     println ("init: " + init(list))
+
+    println ("foldRight1: " + foldRight(list, 0)((x, y) => x + y))
+    println ("foldRight2: " + foldRight(list, Nil:List[Int])(Cons(_,_)))
+    println ("length: " + length(list))
+    println ("foldLeft: " + foldLeft(list, 0)((x, y) => x + y))
+    println ("foldLeftSum: " + foldLeftSum(list))
+    println ("foldLeftProduct: " + foldLeftProduct(list))
+    println ("foldLeftLength: " + foldLeftLength(list))
+    println ("reverse: " + reverse(list))
+
+    println ("appendFolded: " + appendFolded(list, list2))
+    println ("concat: " + concat(List(list, list2, list, list2)))
+
+    println ("addOne: " + addOne(list))
+    println ("doubleToString: " + doubleToString(listDouble))
+    println ("map: " + map(listDouble)(x => x.toString + "mapped"))
+    println ("filter: " + filter(list)(x => x % 2 == 0))
+    println ("flatMap: " + flatMap(list)(i => List(i,i)))
+    println ("filterUsingFlatmap: " + filterUsingFlatmap(list)(x => x % 2 == 0))
+
+    println ("addFunction: " + addFunction(list,list2))
+    println ("zipWith: " + zipWith(list,list2)(_+_))
+
+
   }
+
 }
