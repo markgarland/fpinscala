@@ -21,17 +21,44 @@ object Monoid {
     val zero = Nil
   }
 
-  val intAddition: Monoid[Int] = ???
+  val intAddition: Monoid[Int] = new Monoid[Int] {
+    def op(a1: Int, a2: Int) = a1 + a2
+    val zero = 0
+  }
 
-  val intMultiplication: Monoid[Int] = ???
+  val intMultiplication: Monoid[Int] = new Monoid[Int] {
+    def op(a1: Int, a2: Int) = a1 * a2
+    val zero = 1
+  }
 
-  val booleanOr: Monoid[Boolean] = ???
+  val booleanOr: Monoid[Boolean] = new Monoid[Boolean] {
+    def op(a1: Boolean, a2: Boolean) = a1 || a2
+    val zero = false
+  }
 
-  val booleanAnd: Monoid[Boolean] = ???
+  val booleanAnd: Monoid[Boolean] = new Monoid[Boolean] {
+    def op(a1: Boolean, a2: Boolean) = a1 && a2
+    val zero = true
+  }
 
-  def optionMonoid[A]: Monoid[Option[A]] = ???
+//  def optionMonoid[A]: Monoid[Option[A]] = new Monoid[Option[A]] {
+//    def op(a1: Option[A], a2: Option[A]) = (a1, a2) match {
+//      case (None, None) => None
+//      case (Some(x), None) => Some(x)
+//      case (None, Some(y)) => Some(y)
+//      case (Some(x), Some(y)) => Some(x + y)
+//    }
+//    val zero = None
 
-  def endoMonoid[A]: Monoid[A => A] = ???
+  def optionMonoid[A]: Monoid[Option[A]] = new Monoid[Option[A]] {
+    def op(x: Option[A], y: Option[A]) = x orElse y
+    val zero = None
+  }
+
+  def endoMonoid[A]: Monoid[A => A] = new Monoid[A => A] {
+    def op(f: A => A, g: A => A) = f compose g
+    val zero = (a: A) => a
+  }
 
   // TODO: Placeholder for `Prop`. Remove once you have implemented the `Prop`
   // data type from Part 2.
