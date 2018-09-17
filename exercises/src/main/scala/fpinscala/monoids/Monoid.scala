@@ -41,15 +41,6 @@ object Monoid {
     val zero = true
   }
 
-//  def optionMonoid[A]: Monoid[Option[A]] = new Monoid[Option[A]] {
-//    def op(a1: Option[A], a2: Option[A]) = (a1, a2) match {
-//      case (None, None) => None
-//      case (Some(x), None) => Some(x)
-//      case (None, Some(y)) => Some(y)
-//      case (Some(x), Some(y)) => Some(x + y)
-//    }
-//    val zero = None
-
   def optionMonoid[A]: Monoid[Option[A]] = new Monoid[Option[A]] {
     def op(x: Option[A], y: Option[A]) = x orElse y
     val zero = None
@@ -77,7 +68,7 @@ object Monoid {
     ???
 
   def foldMap[A, B](as: List[A], m: Monoid[B])(f: A => B): B =
-    ???
+    as.foldLeft(m.zero)((y, x) => m.op(f(x), y))
 
   def foldRight[A, B](as: List[A])(z: B)(f: (A, B) => B): B =
     ???
