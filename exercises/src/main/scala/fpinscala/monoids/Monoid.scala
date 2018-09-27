@@ -76,33 +76,60 @@ object Monoid {
   def foldLeft[A, B](as: List[A])(z: B)(f: (B, A) => B): B =
     ???
 
-  def foldMapV[A, B](as: IndexedSeq[A], m: Monoid[B])(f: A => B): B =
-    ???
+  def main(args: Array[String]): Unit = {
+    println(
+      "foldMapV:" +
+        foldMapV[String, Int](IndexedSeq("1", "2", "3", "4"), intAddition)(
+          Integer.parseInt))
+    println("foldMapV Done")
+
+    println("Ordered, looking for true: " + ordered(IndexedSeq(1, 2, 3, 4, 5)))
+    println("Ordered, looking for false: " + ordered(IndexedSeq(1, 2, 8, 4, 5)))
+  }
+
+  def foldMapV[A, B](as: IndexedSeq[A], m: Monoid[B])(f: A => B): B = {
+    println(as)
+    as match {
+      case _ if as.isEmpty     => m.zero
+      case _ if as.length == 1 => f(as.head)
+      case default =>
+        val halves = as.splitAt(as.length / 2)
+        m.op(foldMapV(halves._1, m)(f), foldMapV(halves._2, m)(f))
+    }
+  }
+
+  val cleverIntComparison: Monoid[Option[Int]] = new Monoid[Option[Int]] {
+    def op(a1: Option[Int], a2: Option[Int]) = (a1, a2) match {
+      case (Some(x), Some(y)) => if (y >= x) None else Some(x)
+      case _                  => None
+    }
+    val zero = Some(0)
+  }
 
   def ordered(ints: IndexedSeq[Int]): Boolean =
-    ???
+    foldMap[Int, Option[Int]](ints.toList, cleverIntComparison)(a => Option(a)).isDefined
 
   sealed trait WC
   case class Stub(chars: String) extends WC
   case class Part(lStub: String, words: Int, rStub: String) extends WC
 
-  def par[A](m: Monoid[A]): Monoid[Par[A]] = 
+  def par[A](m: Monoid[A]): Monoid[Par[A]] =
     ???
 
-  def parFoldMap[A,B](v: IndexedSeq[A], m: Monoid[B])(f: A => B): Par[B] = 
+  def parFoldMap[A, B](v: IndexedSeq[A], m: Monoid[B])(f: A => B): Par[B] =
     ???
 
-  val wcMonoid: Monoid[WC] = ???
+  def wcMonoid: Monoid[WC] = ???
 
   def count(s: String): Int = ???
 
-  def productMonoid[A,B](A: Monoid[A], B: Monoid[B]): Monoid[(A, B)] =
+  def productMonoid[A, B](A: Monoid[A], B: Monoid[B]): Monoid[(A, B)] =
     ???
 
-  def functionMonoid[A,B](B: Monoid[B]): Monoid[A => B] =
+  def functionMonoid[A, B](B: Monoid[B]): Monoid[A => B] =
     ???
 
-  def mapMergeMonoid[K,V](V: Monoid[V]): Monoid[Map[K, V]] =
+  def mapMergeMonoid[K, V](V: Monoid[V]): Monoid[Map[K, V]] =
     ???
 
   def bag[A](as: IndexedSeq[A]): Map[A, Int] =
@@ -174,4 +201,3 @@ object OptionFoldable extends Foldable[Option] {
   override def foldRight[A, B](as: Option[A])(z: B)(f: (A, B) => B) =
     ???
 }
-
